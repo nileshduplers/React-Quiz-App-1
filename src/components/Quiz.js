@@ -1,44 +1,65 @@
-import React, { useContext } from 'react';
-import DataContext from '../context/dataContext';
-
-const Quiz = () => {
-    const { showQuiz, question, quizs, checkAnswer, correctAnswer,
-            selectedAnswer,questionIndex, nextQuestion, showTheResult }  = useContext(DataContext);
-
-    return (
-        <section className="bg-dark text-white" style={{ display: `${showQuiz ? 'block' : 'none'}` }}>
-            <div className="container">
-                <div className="row vh-100 align-items-center justify-content-center">
-                    <div className="col-lg-8">
-                        <div className="card p-4" style={{ background: '#3d3d3d', borderColor: '#646464' }}>
-                            <div className="d-flex justify-content-between gap-md-3">
-                                <h5 className='mb-2 fs-normal lh-base'>{question?.question}</h5>
-                                <h5 style={{ color: '#60d600', width: '100px', textAlign: 'right' }}>{quizs.indexOf(question) + 1} / {quizs?.length}</h5>
-                            </div>
-                            <div>
-                                {
-                                    question?.options?.map((item, index) => <button
-                                        key={index}
-                                        className={`option w-100 text-start btn text-white py-2 px-3 mt-3 rounded btn-dark ${correctAnswer === item && 'bg-success'}`}
-                                        onClick={(event) => checkAnswer(event, item)}
-                                    >
-                                        {item}
-                                    </button>)
-                                }
-                            </div>
-
-                            {
-                                (questionIndex + 1) !== quizs.length ?
-                                    <button className='btn py-2 w-100 mt-3 bg-primary text-light fw-bold' onClick={nextQuestion} disabled={!selectedAnswer}>Next Question</button>
-                                    :
-                                    <button className='btn py-2 w-100 mt-3 bg-primary text-light fw-bold' onClick={showTheResult} disabled={!selectedAnswer}>Show Result</button>
-                            }
-                        </div>
-                    </div>
-                </div>
+import React, { useState } from 'react'
+import { QuizData } from '../Data/QuizData'
+import QuizResult from './QuizResult';
+function Quiz() {
+    const [currentQuestion,setCurrentQuestion]=useState(0);
+    const [score,setScore] = useState(0);
+    const [clickedOption,setClickedOption]=useState(0);
+    const [showResult,setShowResult]=useState(false);
+    
+    const changeQuestion = ()=>{
+        updateScore();
+        if(currentQuestion< QuizData.length-1){
+            setCurrentQuestion(currentQuestion+1);
+            setClickedOption(0);
+        }else{
+            setShowResult(true)
+        }
+    }
+    const updateScore=()=>{
+        if(clickedOption===QuizData[currentQuestion].answer){
+            setScore(score+1);
+        }
+    }
+    const resetAll=()=>{
+        setShowResult(false);
+        setCurrentQuestion(0);
+        setClickedOption(0);
+        setScore(0);
+    }
+  return (
+    <div>
+        <p className="heading-txt">Quiz APP</p>
+        <div className="container">
+            {showResult ? (
+                <QuizResult score={score} totalScore={QuizData.length} tryAgain={resetAll}/>
+            ):(
+            <>
+            <div className="question">
+                <span id="question-number">{currentQuestion+1}. </span>
+                <span id="question-txt">{QuizData[currentQuestion].question}</span>
             </div>
-        </section>
-    );
-};
+            <div className="option-container">
+                {QuizData[currentQuestion].options.map((option,i)=>{
+                    return(
+                        <button 
+                        // className="option-btn"
+                        className={`option-btn ${
+                            clickedOption == i+1?"checked":null
+                        }`}
+                        key={i}
+                        onClick={()=>setClickedOption(i+1)}
+                        >
+                        {option}
+                        </button>
+                    )
+                })}                
+            </div>
+            <input type="button" value="Next" id="next-button" onClick={changeQuestion}/>
+            </>)}
+        </div>
+    </div>
+  )
+}
 
-export default Quiz;
+export default Quiz
