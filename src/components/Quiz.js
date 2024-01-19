@@ -1,65 +1,127 @@
-import React, { useState } from 'react'
-import { QuizData } from '../Data/QuizData'
-import QuizResult from './QuizResult';
-function Quiz() {
-    const [currentQuestion,setCurrentQuestion]=useState(0);
-    const [score,setScore] = useState(0);
-    const [clickedOption,setClickedOption]=useState(0);
-    const [showResult,setShowResult]=useState(false);
-    
-    const changeQuestion = ()=>{
-        updateScore();
-        if(currentQuestion< QuizData.length-1){
-            setCurrentQuestion(currentQuestion+1);
-            setClickedOption(0);
-        }else{
-            setShowResult(true)
-        }
-    }
-    const updateScore=()=>{
-        if(clickedOption===QuizData[currentQuestion].answer){
-            setScore(score+1);
-        }
-    }
-    const resetAll=()=>{
-        setShowResult(false);
-        setCurrentQuestion(0);
-        setClickedOption(0);
-        setScore(0);
-    }
-  return (
-    <div>
-        <p className="heading-txt">Quiz APP</p>
-        <div className="container">
-            {showResult ? (
-                <QuizResult score={score} totalScore={QuizData.length} tryAgain={resetAll}/>
-            ):(
-            <>
-            <div className="question">
-                <span id="question-number">{currentQuestion+1}. </span>
-                <span id="question-txt">{QuizData[currentQuestion].question}</span>
-            </div>
-            <div className="option-container">
-                {QuizData[currentQuestion].options.map((option,i)=>{
-                    return(
-                        <button 
-                        // className="option-btn"
-                        className={`option-btn ${
-                            clickedOption == i+1?"checked":null
-                        }`}
-                        key={i}
-                        onClick={()=>setClickedOption(i+1)}
-                        >
-                        {option}
-                        </button>
-                    )
-                })}                
-            </div>
-            <input type="button" value="Next" id="next-button" onClick={changeQuestion}/>
-            </>)}
-        </div>
-    </div>
-  )
-}
+import React, { useRef, useState } from "react";
+import { data } from "../Data/QuizData";
+import { Prev } from "react-bootstrap/esm/PageItem";
 
-export default Quiz
+const Quiz = () => {
+  let [index, setIndex] = useState(0);
+  let [question, setQuestion] = useState(data[index]);
+  let [lock, setLock] = useState(false);
+  let [score, setScore] = useState(0);
+  let [result, setResult] = useState(false);
+
+  let Option1 = useRef(null);
+  let Option2 = useRef(null);
+  let Option3 = useRef(null);
+  let Option4 = useRef(null);
+
+  let option_array = [Option1, Option2, Option3, Option4];
+
+  const checkAns = (e, ans) => {
+    if (lock == false) {
+      if (question.ans === ans) {
+        e.target.classList.add("correct");
+        setLock(true);
+        setScore((prev) => prev + 1);
+      } else {
+        e.target.classList.add("wrong");
+        setLock(true);
+        option_array[question.ans - 1].current.classList.add("correct");
+      }
+    }
+  };
+
+  const next = () => {
+    if (lock === true) {
+      if (index == data.length - 1) {
+        setResult(true);
+        return 0;
+      }
+      setIndex(++index);
+      setQuestion(data[index]);
+      setLock(false);
+
+      option_array.map((option) => {
+        option.current.classList.remove("wrong");
+        option.current.classList.remove("correct");
+        return null;
+      });
+    }
+  };
+
+  const reset = () => {
+    setIndex(0);
+    setQuestion(data[0]);
+    setScore(0);
+    setLock(false);
+    setResult(false);
+  };
+
+  return (
+    <div className="container">
+      <h1>Quiz app</h1>
+      <hr />
+      {result ? (
+        <></>
+      ) : (
+        <>
+          <h2>
+            {index + 1}. {question.question}
+          </h2>
+          <ul>
+            <li
+              ref={Option1}
+              onClick={(e) => {
+                checkAns(e, 1);
+              }}
+            >
+              {question.option1}
+            </li>
+            <li
+              ref={Option2}
+              onClick={(e) => {
+                checkAns(e, 2);
+              }}
+            >
+              {question.option2}
+            </li>
+            <li
+              ref={Option3}
+              onClick={(e) => {
+                checkAns(e, 3);
+              }}
+            >
+              {question.option3}
+            </li>
+            <li
+              ref={Option4}
+              onClick={(e) => {
+                checkAns(e, 4);
+              }}
+            >
+              {question.option4}
+            </li>
+          </ul>
+          <button onClick={next}>Next</button>
+
+          <div className="index">
+            {index + 1} of {data.length} Questions
+          </div>
+        </>
+      )}
+
+      {result ? (
+        <>
+          {" "}
+          <h3>
+            You scored {score} out of {data.length}
+          </h3>
+          <button onClick={reset}>Reset</button>
+        </>
+      ) : (
+        <></>
+      )}
+    </div>
+  );
+};
+
+export default Quiz;
